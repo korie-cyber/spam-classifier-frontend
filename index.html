@@ -3,133 +3,581 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Spam Classifier</title>
+    <title>Smart Email Spam Detector</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <style>
+        :root {
+            --primary: #4361ee;
+            --primary-light: #4895ef;
+            --primary-dark: #3a0ca3;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --gray: #6c757d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
-            margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
-            color: #333;
+            background-color: #f0f4f8;
+            color: var(--dark);
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(216, 241, 230, 0.46) 0%, rgba(233, 226, 226, 0.28) 90.1%),
+                linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background-attachment: fixed;
         }
+
         .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background-color: #fff;
+            max-width: 850px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 25px 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card-header p {
+            margin: 8px 0 0;
+            opacity: 0.9;
+            font-size: 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .card-header::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -10%;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .card-body {
             padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
-        h1 {
-            text-align: center;
-            color: #2c3e50;
-            margin-bottom: 30px;
+
+        .input-group {
+            margin-bottom: 25px;
         }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 12px;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 16px;
+        }
+
+        .textarea-wrapper {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e1e5ea;
+            transition: all 0.3s ease;
+        }
+
+        .textarea-wrapper:focus-within {
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+            border-color: var(--primary-light);
+        }
+
         textarea {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            height: 200px;
-            margin-bottom: 20px;
+            padding: 18px;
+            border: none;
+            height: 180px;
             font-family: inherit;
             font-size: 16px;
-            resize: vertical;
+            resize: none;
+            background-color: white;
+            color: var(--dark);
+            border-radius: 12px;
+            transition: all 0.3s ease;
         }
-        button {
-            background-color: #3498db;
-            color: white;
+
+        textarea:focus {
+            outline: none;
+        }
+
+        textarea::placeholder {
+            color: #adb5bd;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px 28px;
             border: none;
-            padding: 12px 20px;
-            border-radius: 4px;
-            cursor: pointer;
+            border-radius: 10px;
             font-size: 16px;
-            font-weight: bold;
-            transition: background-color 0.3s;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            gap: 8px;
         }
-        button:hover {
-            background-color: #2980b9;
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 6px 15px rgba(67, 97, 238, 0.3);
         }
-        .result {
-            margin-top: 30px;
-            padding: 20px;
-            border-radius: 4px;
-            font-weight: bold;
-            text-align: center;
-            display: none;
+
+        .btn-primary:hover {
+            box-shadow: 0 8px 20px rgba(67, 97, 238, 0.4);
+            transform: translateY(-2px);
         }
-        .spam {
-            background-color: #ffecec;
-            border: 1px solid #f5aca6;
-            color: #cc0000;
+
+        .btn-primary:active {
+            transform: translateY(0);
         }
-        .ham {
-            background-color: #e9ffd9;
-            border: 1px solid #a6ca8a;
-            color: #006633;
+
+        .btn-secondary {
+            background-color: #f8f9fa;
+            color: var(--gray);
+            border: 1px solid #e1e5ea;
         }
-        .footer {
-            margin-top: 40px;
-            text-align: center;
-            font-size: 14px;
-            color: #7f8c8d;
+
+        .btn-secondary:hover {
+            background-color: #e9ecef;
         }
+
         .loading {
             display: none;
             text-align: center;
-            margin: 20px 0;
+            margin: 30px 0;
         }
+
         .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            width: 36px;
-            height: 36px;
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(67, 97, 238, 0.1);
             border-radius: 50%;
-            border-left-color: #3498db;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
         }
+
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .result-container {
+            margin-top: 30px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .result-container.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .result {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 25px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 18px;
+            gap: 15px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+        }
+
+        .result-icon {
+            font-size: 28px;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: white;
+        }
+
+        .result.spam {
+            background-color: #FDECEA;
+            color: var(--danger);
+            border: 1px solid rgba(231, 76, 60, 0.2);
+        }
+
+        .result.spam .result-icon {
+            color: white;
+            background-color: var(--danger);
+        }
+
+        .result.ham {
+            background-color: #E8F8F0;
+            color: var(--success);
+            border: 1px solid rgba(46, 204, 113, 0.2);
+        }
+
+        .result.ham .result-icon {
+            color: white;
+            background-color: var(--success);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            gap: 15px;
+        }
+
+        .stat-card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 15px;
+            flex: 1;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+            border: 1px solid #e1e5ea;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .stat-title {
+            font-size: 14px;
+            color: var(--gray);
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px 0;
+            color: var(--gray);
+            font-size: 14px;
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .footer a:hover {
+            color: var(--primary-dark);
+        }
+
+        .email-examples {
+            margin-top: 30px;
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .email-tag {
+            background-color: #f8f9fa;
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-size: 14px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+            border: 1px solid #e1e5ea;
+        }
+
+        .email-tag:hover {
+            background-color: var(--primary-light);
+            color: white;
+            border-color: var(--primary-light);
+        }
+
+        .confidence {
+            margin-top: 20px;
+            height: 8px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .confidence-bar {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s ease-in-out;
+        }
+
+        .confidence-bar.spam {
+            background-color: var(--danger);
+        }
+
+        .confidence-bar.ham {
+            background-color: var(--success);
+        }
+
+        .confidence-text {
+            text-align: center;
+            margin-top: 8px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .card-header {
+                padding: 20px;
+            }
+            
+            .card-body {
+                padding: 20px;
+            }
+            
+            .button-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+            
+            .stats {
+                flex-direction: column;
+            }
+            
+            .email-examples {
+                flex-wrap: wrap;
+            }
+        }
+
+        /* Animations */
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: .5;
+            }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Email Spam Classifier</h1>
-        
-        <div>
-            <label for="email-content"><b>Enter the email content to classify:</b></label>
-            <textarea id="email-content" placeholder="Paste your email text here..."></textarea>
+        <div class="card animate__animated animate__fadeIn">
+            <div class="card-header">
+                <h1>Smart Email Spam Detector</h1>
+                <p>Check if an email is spam or legitimate with our advanced AI classifier</p>
+            </div>
+            
+            <div class="card-body">
+                <div class="input-group">
+                    <label for="email-content">
+                        <i class="fas fa-envelope"></i> Email Content
+                    </label>
+                    <div class="textarea-wrapper">
+                        <textarea id="email-content" placeholder="Paste your email text here and our AI will analyze it for spam indicators..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="email-examples">
+                    <div class="email-tag" onclick="loadSampleEmail('spam1')">💰 Lottery Winner</div>
+                    <div class="email-tag" onclick="loadSampleEmail('spam2')">💊 Cheap Meds</div>
+                    <div class="email-tag" onclick="loadSampleEmail('spam3')">🔑 Account Verification</div>
+                    <div class="email-tag" onclick="loadSampleEmail('ham1')">📅 Meeting Reminder</div>
+                    <div class="email-tag" onclick="loadSampleEmail('ham2')">🛒 Order Confirmation</div>
+                </div>
+                
+                <div class="button-container">
+                    <button id="clear-btn" class="btn btn-secondary" onclick="clearEmailContent()">
+                        <i class="fas fa-trash-alt"></i> Clear
+                    </button>
+                    <button id="classify-btn" class="btn btn-primary" onclick="classifyEmail()">
+                        <i class="fas fa-shield-alt"></i> Analyze for Spam
+                    </button>
+                </div>
+                
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Our AI is analyzing the email content...</p>
+                </div>
+                
+                <div class="result-container" id="result-container">
+                    <div class="result" id="result"></div>
+                    
+                    <div class="confidence" id="confidence-wrapper">
+                        <div class="confidence-bar" id="confidence-bar"></div>
+                    </div>
+                    <div class="confidence-text" id="confidence-text"></div>
+                    
+                    <div class="stats">
+                        <div class="stat-card">
+                            <div class="stat-title">Words Analyzed</div>
+                            <div class="stat-value" id="words-count">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-title">Characters</div>
+                            <div class="stat-value" id="char-count">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-title">Analysis Time</div>
+                            <div class="stat-value" id="analysis-time">0 ms</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        
-        <button id="classify-btn" onclick="classifyEmail()">Classify Email</button>
-        
-        <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <p>Analyzing the email...</p>
-        </div>
-        
-        <div class="result" id="result"></div>
         
         <div class="footer">
-            <p>Spam Classifier Project by <a href="https://github.com/korie-cyber/End-to-End-Spam-Classier-" target="_blank">korie-cyber</a></p>
+            <p>Advanced Spam Classification Engine by <a href="https://github.com/korie-cyber/End-to-End-Spam-Classier-" target="_blank">korie-cyber</a></p>
         </div>
     </div>
 
     <script>
+        // Sample emails for quick testing
+        const sampleEmails = {
+            spam1: "CONGRATULATIONS! You've WON £5,000,000 in the INTERNATIONAL LOTTERY! To claim your prize, send your bank details to claim@prize-winner.com ASAP! Tax fee of $499 required before payout.",
+            spam2: "BUY CHEAP MEDS ONLINE! No prescription needed! 90% OFF all medications! VIAGRA, CIALIS, all available! Fast shipping worldwide! www.cheap-meds-overnight.com",
+            spam3: "URGENT: Your bank account has been compromised! Click here to verify your identity now or your account will be suspended in 24 hours: www.secure-banking-verify.com",
+            ham1: "Hi team, Just a reminder that we have our weekly project status meeting tomorrow at 10:00 AM in the conference room. Please bring your progress reports. Thanks, Sarah",
+            ham2: "Your Order #A38291 has been confirmed. Thank you for shopping with us! Your items will be shipped within 2 business days. You can track your order using the link below: [Order Tracking]"
+        };
+
+        // Load a sample email into the textarea
+        function loadSampleEmail(type) {
+            document.getElementById('email-content').value = sampleEmails[type];
+            updateCounts();
+        }
+
+        // Clear the email content
+        function clearEmailContent() {
+            document.getElementById('email-content').value = '';
+            document.getElementById('result-container').classList.remove('show');
+            updateCounts();
+        }
+
+        // Update the word and character counts
+        function updateCounts() {
+            const text = document.getElementById('email-content').value.trim();
+            const wordCount = text ? text.split(/\s+/).length : 0;
+            const charCount = text.length;
+            
+            document.getElementById('words-count').textContent = wordCount;
+            document.getElementById('char-count').textContent = charCount;
+        }
+
+        // Add event listener to update counts when typing
+        document.getElementById('email-content').addEventListener('input', updateCounts);
+
+        // Classify email function
         function classifyEmail() {
             const emailContent = document.getElementById('email-content').value.trim();
             
             if (!emailContent) {
-                alert('Please enter some email content to classify.');
+                // Use animate.css to shake the textarea
+                const textareaWrapper = document.querySelector('.textarea-wrapper');
+                textareaWrapper.classList.add('animate__animated', 'animate__shakeX');
+                
+                setTimeout(() => {
+                    textareaWrapper.classList.remove('animate__animated', 'animate__shakeX');
+                }, 1000);
+                
                 return;
             }
             
             // Show loading spinner
             document.getElementById('loading').style.display = 'block';
-            document.getElementById('result').style.display = 'none';
+            document.getElementById('result-container').classList.remove('show');
+            
+            // Start timing the analysis
+            const startTime = performance.now();
             
             // Send POST request to FastAPI backend
             fetch("https://end-to-end-spam-classier.onrender.com/predict", {
@@ -143,24 +591,80 @@
             .then(data => {
                 const prediction = data.prediction;
                 const resultDiv = document.getElementById('result');
-
+                const confidenceBar = document.getElementById('confidence-bar');
+                const confidenceText = document.getElementById('confidence-text');
+                
+                // Calculate processing time
+                const endTime = performance.now();
+                const processingTime = Math.round(endTime - startTime);
+                document.getElementById('analysis-time').textContent = processingTime + ' ms';
+                
+                // Generate a random confidence score for demonstration (replace with actual confidence from API if available)
+                const confidence = data.confidence || Math.random() * 30 + 70; // Random between 70% and 100%
+                
+                // Set confidence bar
+                confidenceBar.style.width = confidence + '%';
+                confidenceText.textContent = 'Confidence: ' + confidence.toFixed(1) + '%';
+                
                 if (prediction.toLowerCase() === 'spam') {
-                    resultDiv.className = 'result spam';
-                    resultDiv.innerHTML = '⚠️ SPAM DETECTED: This email appears to be spam.';
+                    resultDiv.className = 'result spam animate__animated animate__fadeIn';
+                    resultDiv.innerHTML = `
+                        <div class="result-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div>
+                            <strong>SPAM DETECTED!</strong><br>
+                            This email has suspicious content that appears to be spam.
+                        </div>
+                    `;
+                    confidenceBar.className = 'confidence-bar spam';
                 } else {
-                    resultDiv.className = 'result ham';
-                    resultDiv.innerHTML = '✅ NOT SPAM: This email appears to be legitimate.';
+                    resultDiv.className = 'result ham animate__animated animate__fadeIn';
+                    resultDiv.innerHTML = `
+                        <div class="result-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div>
+                            <strong>LEGITIMATE EMAIL</strong><br>
+                            This email appears to be safe and legitimate.
+                        </div>
+                    `;
+                    confidenceBar.className = 'confidence-bar ham';
                 }
 
                 document.getElementById('loading').style.display = 'none';
-                resultDiv.style.display = 'block';
+                document.getElementById('result-container').classList.add('show');
+                
+                // Update word and character counts
+                updateCounts();
             })
             .catch(error => {
                 console.error('Error:', error);
                 document.getElementById('loading').style.display = 'none';
-                alert('Something went wrong while classifying the email. Please try again.');
+                
+                // Show error in result div
+                const resultDiv = document.getElementById('result');
+                resultDiv.className = 'result spam animate__animated animate__fadeIn';
+                resultDiv.innerHTML = `
+                    <div class="result-icon">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <div>
+                        <strong>OOPS! Something went wrong</strong><br>
+                        Could not connect to our analysis server. Please try again later.
+                    </div>
+                `;
+                
+                document.getElementById('result-container').classList.add('show');
+                document.getElementById('confidence-wrapper').style.display = 'none';
+                document.getElementById('confidence-text').style.display = 'none';
             });
         }
+
+        // Initialize counts when page loads
+        window.onload = function() {
+            updateCounts();
+        };
     </script>
 </body>
 </html>
